@@ -10,6 +10,16 @@ dockerContextDirs = ${dir ${dockerContextFiles}}
 actionVerbs = build run push
 toolPath = Tools/
 
+.SECONDEXPANSION:
+
+#### ---- ---- ---- ---- ---- ---- ----
+
+## Default action when running `make` without an argument
+
+default: clearScreen list usage;
+
+#### ---- ---- ---- ---- ---- ---- ----
+
 ## Docker Application Dependancies
 #    What order to build prerequisates in order.
 #
@@ -20,14 +30,6 @@ toolPath = Tools/
 #    centos/httpd-perl/build: centos/httpd/build
 #    centos/mariadb/build: centos/-base/build
 #    centos/mysql/build: centos/-base/build
-
-.SECONDEXPANSION:
-
-#### ---- ---- ---- ---- ---- ---- ----
-
-## Default action when running `make` without an argument
-
-default: clearScreen list usage;
 
 #### ---- ---- ---- ---- ---- ---- ----
 
