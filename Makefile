@@ -1,3 +1,9 @@
+# Docker project Makefile
+#   started by Mike Cramer
+#   on November 15, 2016
+#
+# Automation for Docker build, test run, and push to registry server.
+#
 
 makeBuildTag := ${shell date "+%Y%m%d_%H%M%S"}-make_${USER}
 
