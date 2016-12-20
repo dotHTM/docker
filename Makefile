@@ -1,5 +1,5 @@
 
-makeBuildTag=${shell date "+%Y%m%d_%H%M%S"}-make_${USER}
+makeBuildTag := ${shell date "+%Y%m%d_%H%M%S"}-make_${USER}
 
 ## Find all Docker files and get a list of their parent directories. These must be stored at the same directory depth. I.E. ./distro/app/Dockerfile
 searchDepthString = */*
