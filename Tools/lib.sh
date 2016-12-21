@@ -7,8 +7,15 @@ OUTPUT_PREFIX=""
 
 export DOCKER_TAG=`date "+%Y%m%d_%H%M%S"`-$USER
 
+dockerPATH=`which docker`
+
+
 # ------------------------------------
 # ------------------------------------
+
+docker(){
+	$dockerPATH $@
+}
 
 
 # ------------------------------------
@@ -34,8 +41,6 @@ outputToScreen(){
 findDockerFile(){
 	inputPath=$1 && shift
 	DOCKER_FILEPATH=""
-	
-	# echo "inputPath = $inputPath"
 	
 	if [[ -z $inputPath ]]; then
 		inputPath="."
@@ -156,7 +161,7 @@ readDockerFile(){
 	outputToScreen "------------------------------"
 	
 	DOCKER_REPOSITORY=$DOCKER_IMAGE_SERVER/$DOCKER_USER/$DOCKER_IMAGE_NAME
-	export DOCKER_REPOSITORY=`echo $DOCKER_REPOSITORY | perl -pe 's/\/\//\//' | perl -pe 's/^\///' | perl -pe 's/^\///' ` 
+	export DOCKER_REPOSITORY=`echo $DOCKER_REPOSITORY | perl -pe 's/\/\//\//' `
 
 }
 
@@ -164,7 +169,7 @@ reviewImages(){
 	for anLabel in $DOCKER_LABELS; do
 		export DOCKER_IMAGES_FILTER_ARGS=$DOCKER_IMAGES_FILTER_ARGS" -f label="$anLabel
 	done
-	echo DOCKER_IMAGES_FILTER_ARGS = $DOCKER_IMAGES_FILTER_ARGS
+	outputToScreen DOCKER_IMAGES_FILTER_ARGS = $DOCKER_IMAGES_FILTER_ARGS
 	docker images $DOCKER_IMAGES_FILTER_ARGS
 }
 
@@ -181,14 +186,34 @@ buildDockerfile(){
 		-t ${DOCKER_REPOSITORY} \
 		$DOCKER_CONTEXT
 
-		outputToScreen "Tagging"
-		if [[ -n $1 ]]; then
-			docker tag ${DOCKER_REPOSITORY} ${DOCKER_REPOSITORY}:$1
-		else
-			docker tag ${DOCKER_REPOSITORY} ${DOCKER_REPOSITORY}:${DOCKER_TAG}
-		fi
+		tagDockerImage $1
 		
 		reviewImages
+	fi
+}
+
+tagDockerfile(){
+	projectDirectory=$1 && shift
+	
+	readDockerFile $projectDirectory
+	
+	if [[ $? ]]; then
+		outputToScreen "~Not~ Building"
+
+		tagDockerImage $1
+
+		reviewImages
+	fi
+}
+
+tagDockerImage(){
+	outputToScreen "Tagging"
+	if [[ -n $1 ]]; then
+		outputToScreen "Was given the tag \"$1\""
+		docker tag ${DOCKER_REPOSITORY} ${DOCKER_REPOSITORY}:$1
+	else
+		outputToScreen "Was NOT given tag. Using \"${DOCKER_TAG}\" instead"
+		docker tag ${DOCKER_REPOSITORY} ${DOCKER_REPOSITORY}:${DOCKER_TAG}
 	fi
 }
 
@@ -213,14 +238,16 @@ pushDockerfile(){
 
 	if [[ -z $1 ]]; then
 
-			echo "Remember to use a tag from the image list"
-			echo "  Filter:  "$DOCKER_IMAGES_FILTER_ARGS
-			
-			reviewImages
-		else
-			docker push $DOCKER_REPOSITORY
-			docker push $DOCKER_REPOSITORY:$1
-		fi
+		outputToScreen "Remember to use a tag from the image list"
+		outputToScreen "  Filter:  "$DOCKER_IMAGES_FILTER_ARGS
+		
+		reviewImages
+	else
+		outputToScreen "Pushing the base name"
+		docker push $DOCKER_REPOSITORY
+		outputToScreen "Pushing with the tag given \"$1\""
+		docker push $DOCKER_REPOSITORY:$1
+	fi
 }
 
 
