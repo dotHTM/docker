@@ -167,7 +167,7 @@ readDockerFile(){
 	outputToScreen "------------------------------"
 	
 	DOCKER_REPOSITORY=$DOCKER_IMAGE_SERVER/$DOCKER_USER/$DOCKER_IMAGE_NAME
-	export DOCKER_REPOSITORY=`echo $DOCKER_REPOSITORY | perl -pe 's/\/\//\//' | perl -pe 's/\///' | perl -pe 's/\///' `
+	export DOCKER_REPOSITORY=`echo $DOCKER_REPOSITORY | perl -pe 's/\/\//\//' | perl -pe 's/^\///' | perl -pe 's/^\///' `
 
 }
 
