@@ -130,6 +130,12 @@ readDockerFile(){
 							outputToScreen "Image Name: $DOCKER_IMAGE_NAME"
 							;;
 						#
+						*image_user* )
+							#
+							export DOCKER_USER=`echo $fragment | perl -pe 's/.*=//gi'`
+							outputToScreen "Image user: $DOCKER_USER"
+							;;
+						#
 						*image_server* )
 							#
 							export DOCKER_IMAGE_SERVER=`echo $fragment | perl -pe 's/.*=//gi'`
@@ -161,7 +167,7 @@ readDockerFile(){
 	outputToScreen "------------------------------"
 	
 	DOCKER_REPOSITORY=$DOCKER_IMAGE_SERVER/$DOCKER_USER/$DOCKER_IMAGE_NAME
-	export DOCKER_REPOSITORY=`echo $DOCKER_REPOSITORY | perl -pe 's/\/\//\//' `
+	export DOCKER_REPOSITORY=`echo $DOCKER_REPOSITORY | perl -pe 's/\/\//\//' | perl -pe 's/\///' | perl -pe 's/\///' `
 
 }
 
