@@ -15,7 +15,7 @@ dockerContextFiles = ${wildcard ${searchDepthString}/Dockerfile}
 dockerContextDirs = ${dir ${dockerContextFiles}}
 
 ## Actions which will build phony and clean recipes quickly
-actionVerbs = build run tag push
+actionVerbs = clean build run tag push
 toolPath = Tools/
 
 .SECONDEXPANSION:
@@ -70,8 +70,7 @@ ${foreach anDir,${dockerContextDirs},${anDir}push.log}: $${dir $$@}tag
 .PHONY: default debug list usage cls clean hitman-subtask hitman lsr repo-local force \
 	build run tag push usage \
 	${foreach anDir,${dockerContextDirs},${foreach anVerb,${actionVerbs},${anDir}${anVerb}}} \
-	${foreach anDir,${dockerContextDirs},${anDir}} \
-	${foreach anDir,${dockerContextDirs},${anDir}touch}
+	${foreach anDir,${dockerContextDirs},${anDir}}
 
 #### ---- ---- ----
 
@@ -157,8 +156,9 @@ ${foreach anDir,${dockerContextDirs},${foreach anVerb,${actionVerbs},${anDir}${a
 
 ${foreach anDir,${dockerContextDirs},${anDir}}: $$@build.log
 
-${foreach anDir,${dockerContextDirs},${anDir}touch}: force $${dir $$@}Dockerfile
-	touch ${dir $@}Dockerfile
+
+${foreach anDir,${dockerContextDirs},${anDir}clean}: force
+	rm -rf ${dir $@}*.log
 
 #### ---- ---- ---- ---- ---- ---- ----
 
