@@ -13,5 +13,8 @@ include tools.makefile
 # Example:
 #    distro/app/build: distro/-base/build
 
-centos/httpd/build: centos/-base/build
-centos/httpd-perl/build: centos/httpd/build
+centos/httpd/: centos/-base/ ;
+
+centos/httpd-perl/: centos/httpd/ ;
+
+hub/gruntySass/: hub/rubyNode/ ;
