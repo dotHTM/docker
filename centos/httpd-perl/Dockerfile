@@ -1,4 +1,4 @@
-FROM moby.gw.utexas.edu:5000/centos7-httpd
+FROM dothtm/centos7-httpd
 MAINTAINER Mike Cramer <imanerd {at} me [dot] com>
 
 LABEL version="1.0"

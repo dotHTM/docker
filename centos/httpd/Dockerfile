@@ -1,4 +1,4 @@
-FROM moby.gw.utexas.edu:5000/centos7
+FROM dothtm/centos7
 MAINTAINER Mike Cramer <imanerd {at} me [dot] com>
 
 LABEL description="A CentOS container with Apache"
