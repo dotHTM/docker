@@ -2,8 +2,7 @@ FROM dothtm/rubynode
 
 LABEL description="Grunt and Sass built inside a base with Ruby and Node.js in one container."
 
-LABEL image_name=gruntysass
-LABEL image_user=dothtm
+LABEL image_tag=dothtm/gruntysass
 
 LABEL filter_distro=hub-mod
 LABEL filter_app=grunty-sass

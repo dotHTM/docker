@@ -4,13 +4,10 @@ MAINTAINER Mike Cramer <imanerd {at} me [dot] com>
 
 LABEL description="A base CentOS container for building others"
 
-LABEL image_name=centos7
-LABEL image_server=
+LABEL image_tag=dothtm/centos7
 
 LABEL filter_distro=centos
 LABEL filter_app=base
-
-
 
 RUN yum -y update && \
 		yum install -y \

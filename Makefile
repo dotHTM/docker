@@ -18,3 +18,5 @@ centos/httpd/: centos/-base/ ;
 centos/httpd-perl/: centos/httpd/ ;
 
 hub/gruntySass/: hub/rubyNode/ ;
+
+centos/ruby/: centos/-base/ ;

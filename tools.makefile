@@ -5,13 +5,14 @@
 #  Automation for Docker build, test run, and push to registry server.
 #
 
-makeBuildTag := ${shell date "+%Y%m%d_%H%M%S"}-make_${USER}
+makeBuildTag := ${shell date "+%Y%m%d_%H%M%S"}
+#-make_${USER}
 
 ## Find all Docker files and get a list of their parent directories.
 #  These must be stored at the same directory depth.
 #  I.E. ./distro/app/Dockerfile
 searchDepthString = */*
-dockerContextFiles = ${wildcard ${searchDepthString}/Dockerfile}
+dockerContextFiles = ${wildcard ${searchDepthString}/*Dockerfile}
 dockerContextDirs = ${dir ${dockerContextFiles}}
 
 ## Actions which will build phony and clean recipes quickly
@@ -77,7 +78,7 @@ ${foreach anDir,${dockerContextDirs},${anDir}}: $${dir $$@}build.log
 ## Logged Verbs
 
 ## Build a Dockerfile and log
-${foreach anDir,${dockerContextDirs},${anDir}build.log}: $${dir $$@}Dockerfile $${wildcard $${dir $$@}*}
+${foreach anDir,${dockerContextDirs},${anDir}build.log}: $${wildcard $${dir $$@}/*Dockerfile} #$${wildcard $${dir $$@}*}
 	@echo "${tput_cyan}## $@${tput_nrml}"
 	@echo "${tput_cyan}#  Building the docker image w/ tag ${tput_yellow}${makeBuildTag}${tput_nrml}"
 	@echo -n "	${tput_green}>${tput_nrml} ${tput_bold}"
@@ -111,15 +112,17 @@ ${foreach anDir,${dockerContextDirs},${anDir}run}: $${dir $$@}build
 	@echo -n "${tput_nrml}"
 
 ## Touch a Dockerfile
-${foreach anDir,${dockerContextDirs},${anDir}touch}: $${dir $$@}Dockerfile
+${foreach anDir,${dockerContextDirs},${anDir}touch}: $${wildcard $${dir $$@}/*Dockerfile}
 	@echo "${tput_cyan}## $@${tput_nrml}"
-	@echo "${tput_cyan}#  Touching ${dir $@}Dockerfile${tput_nrml}"
+	@echo "${tput_cyan}#  Touching ${dir $@}*Dockerfile${tput_nrml}"
 	@echo -n "	${tput_green}>${tput_nrml} ${tput_bold}"
-	touch ${dir $@}Dockerfile
+	touch ${dir $@}*Dockerfile
 	@echo -n "${tput_nrml}"
 
 ## Build-force a Dockerfile
-${foreach anDir,${dockerContextDirs},${anDir}build-force}: $${dir $$@}touch $${dir $$@}build
+${foreach anDir,${dockerContextDirs},${anDir}build-force}: 
+	${MAKE} ${dir $@}touch 
+	${MAKE} ${dir $@}build
 
 
 
@@ -220,7 +223,7 @@ hitman-subtask_DontRunThisByItself:
 	${toolPath}dkHitman.sh
 	${toolPath}dkHitman.sh
 
-hitman_yesIUnderstandWhatThisIsDoing: force cls clean hitman-subtask_yesIUnderstandWhatThisIsDoing serverLocalStorageReset_yesIUnderstandWhatThisIsDoing repo-local
+hitman_yesIUnderstandWhatThisIsDoing: force cls clean hitman-subtask_DontRunThisByItself serverLocalStorageReset_yesIUnderstandWhatThisIsDoing repo-local
 
 lsr: repo-local
 

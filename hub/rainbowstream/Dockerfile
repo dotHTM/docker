@@ -2,9 +2,7 @@ FROM python
 
 LABEL description="Rainbowstream Twitter Client"
 
-LABEL image_name=rainbowstream
-LABEL image_server=
-
+LABEL image_tag=dothtm/rainbowstream
 
 RUN apt-get update -y
 

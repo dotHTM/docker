@@ -2,9 +2,7 @@ FROM buildpack-deps:jessie
 
 LABEL description="Ruby and Node.js in one container. Highly plagerized from the library Ruby and Node dockerfile references."
 
-LABEL image_name=rubynode
-LABEL image_user=dothtm
-
+LABEL image_tag=dothtm/rubynode
 
 LABEL filter_distro=hub-mod
 LABEL filter_app=ruby-node

@@ -81,8 +81,13 @@ findDockerFile(){
 		outputToScreen "${tput_cyan}Path is a directory"
 		
 		inputPath=`echo $inputPath | perl -pe "s/\/\//\//"`
-		foundDockerfiles=`find $inputPath -name "Dockerfile"`
+		foundDockerfiles=`find $inputPath -name "*Dockerfile"`
 		countDockerfiles=`echo $foundDockerfiles | wc -w`
+		
+		outputToScreen "Found these items:"
+		for anFile in $foundDockerfiles; do
+			outputToScreen " - "$anFile
+		done
 		
 		if [[ "$countDockerfiles" -eq 1 ]]; then
 			outputToScreen "${tput_cyan}Found file inside: $foundDockerfiles"
@@ -169,6 +174,12 @@ readDockerFile(){
 							outputToScreen "Image Server: ${tput_yellow}$DOCKER_IMAGE_SERVER"
 							;;
 						#
+						*image_tag* )
+							#
+							export DOCKER_OVERRIDE_TAG=`echo $fragment | perl -pe 's/.*=//gi'`
+							outputToScreen "Image tag: ${tput_yellow}$DOCKER_OVERRIDE_TAG"
+							;;
+						#
 						*filter_* )
 							#
 							DOCKER_LABELS=$DOCKER_LABELS" "$fragment
@@ -193,7 +204,12 @@ readDockerFile(){
 	
 	outputToScreen "------------------------------"
 	
-	DOCKER_REPOSITORY=$DOCKER_IMAGE_SERVER/$DOCKER_USER/$DOCKER_IMAGE_NAME
+	if [[ -z $DOCKER_OVERRIDE_TAG ]]; then
+		DOCKER_REPOSITORY=$DOCKER_IMAGE_SERVER/$DOCKER_USER/$DOCKER_IMAGE_NAME
+	else
+		DOCKER_REPOSITORY=$DOCKER_OVERRIDE_TAG
+	fi
+	
 	export DOCKER_REPOSITORY=`echo $DOCKER_REPOSITORY | perl -pe 's/\/\//\//' | perl -pe 's/^\///' | perl -pe 's/^\///' `
 
 }
@@ -218,6 +234,7 @@ buildDockerfile(){
 		docker build -t \
 		${DOCKER_REPOSITORY} \
 		$DOCKER_CONTEXT \
+		-f $DOCKER_FILEPATH \
 		&& tagDockerImage $1 \
 		&& reviewImages
 		
