@@ -9,11 +9,38 @@ export DOCKER_TAG=`date "+%Y%m%d_%H%M%S"`-$USER
 
 dockerPATH=`which docker`
 
+# ------------------------------------
+
+tput init
+tput_nrml=`tput sgr0`       # ${tput_nrml}
+
+tput_bold=`tput bold`       # ${tput_bold}
+tput_undl=`tput smul`       # ${tput_undl}
+tput_revE=`tput rev`        # ${tput_revE}
+tput_blnk=`tput blink`      # ${tput_blnk}
+
+tput_black=`tput setaf 0`   # ${tput_black}
+tput_red=`tput setaf 1`     # ${tput_red}      Error message
+tput_green=`tput setaf 2`   # ${tput_green}
+tput_yellow=`tput setaf 3`  # ${tput_yellow}   Details
+tput_blue=`tput setaf 4`    # ${tput_blue}
+tput_magenta=`tput setaf 5` # ${tput_magenta}
+tput_cyan=`tput setaf 6`    # ${tput_cyan}     Information Message
+tput_white=`tput setaf 7`   # ${tput_white}
+
+
+# ------------------------------------
+
+echo
+echo " -> lib.sh"
 
 # ------------------------------------
 # ------------------------------------
 
 docker(){
+	echo
+	echo "	${tput_green}\$${tput_nrml} ${tput_bold}$dockerPATH $@${tput_nrml}"
+	echo
 	$dockerPATH $@
 }
 
@@ -34,7 +61,7 @@ statusExit(){
 }
 
 outputToScreen(){
-	echo $OUTPUT_PREFIX" • "$@
+	echo $OUTPUT_PREFIX" • "$@${tput_nrml}
 }
 
 # findDockerFile path/to/docker/project/or/file
@@ -47,22 +74,22 @@ findDockerFile(){
 	fi
 	
 	if [[ -f $inputPath ]]; then
-		outputToScreen "Using File: $inputPath"
+		outputToScreen "${tput_cyan}Using File: $inputPath"
 		DOCKER_FILEPATH=$inputPath
 		
 	elif [[ -d $inputPath ]]; then
-		outputToScreen "Path is a directory"
+		outputToScreen "${tput_cyan}Path is a directory"
 		
 		inputPath=`echo $inputPath | perl -pe "s/\/\//\//"`
 		foundDockerfiles=`find $inputPath -name "Dockerfile"`
 		countDockerfiles=`echo $foundDockerfiles | wc -w`
 		
 		if [[ "$countDockerfiles" -eq 1 ]]; then
-			outputToScreen "Found file inside: $foundDockerfiles"
+			outputToScreen "${tput_cyan}Found file inside: $foundDockerfiles"
 			DOCKER_FILEPATH=$foundDockerfiles
 			
 		elif [[ "$countDockerfiles" -gt 1 ]]; then
-			outputToScreen "Found more than one file:"
+			outputToScreen "${tput_red}Found more than one file:"
 			
 			OLD_IFS="$IFS"
 			IFS=
@@ -72,7 +99,7 @@ findDockerFile(){
 			IFS="$OLD_IFS"
 			statusExit
 		else
-			outputToScreen "Didn't find any (obvious) files to use."
+			outputToScreen "${tput_red}Didn't find any (obvious) files to use."
 			statusExit
 		fi
 	fi
@@ -82,20 +109,20 @@ findDockerFile(){
 	if [[ -n $DOCKER_FILEPATH ]]; then
 		if [[ -a $DOCKER_FILEPATH ]]; then
 			if [[ -d $DOCKER_FILEPATH ]]; then
-				outputToScreen "Path is not a directory, not a file: $DOCKER_FILEPATH"
+				outputToScreen "${tput_red}Path is not a directory, not a file: $DOCKER_FILEPATH"
 				statusExit
 			else
-				outputToScreen "File looks good from up here."
+				outputToScreen "${tput_cyan}File looks good from up here."
 				
 				export DOCKER_CONTEXT=`dirname $DOCKER_FILEPATH`
 				
 			fi
 		else
-			outputToScreen "File does not exist: $DOCKER_FILEPATH"
+			outputToScreen "${tput_red}File does not exist: $DOCKER_FILEPATH"
 			statusExit
 		fi
 	else
-		outputToScreen "Nothing to read, "
+		outputToScreen "${tput_red}Nothing to read, "
 		statusExit
 	fi
 }
@@ -107,7 +134,7 @@ readDockerFile(){
 		
 		DOCKER_LABELS=""
 
-		outputToScreen "Time to read that file!!!"
+		outputToScreen "${tput_cyan}Time to read that file!!!"
 		outputToScreen "------------------------------"
 		
 		
@@ -121,36 +148,36 @@ readDockerFile(){
 							#
 							# Ignore for now, essentially a comment
 							DESC_LINE=`echo $fragment | perl -pe 's/.*=//gi'`
-							outputToScreen "Desc: $DESC_LINE"
+							outputToScreen "Desc: ${tput_yellow}$DESC_LINE"
 							;;
 						#
 						*image_name* )
 							#
 							export DOCKER_IMAGE_NAME=`echo $fragment | perl -pe 's/.*=//gi'`
-							outputToScreen "Image Name: $DOCKER_IMAGE_NAME"
+							outputToScreen "Image Name: ${tput_yellow}$DOCKER_IMAGE_NAME"
 							;;
 						#
 						*image_user* )
 							#
 							export DOCKER_USER=`echo $fragment | perl -pe 's/.*=//gi'`
-							outputToScreen "Image user: $DOCKER_USER"
+							outputToScreen "Image user: ${tput_yellow}$DOCKER_USER"
 							;;
 						#
 						*image_server* )
 							#
 							export DOCKER_IMAGE_SERVER=`echo $fragment | perl -pe 's/.*=//gi'`
-							outputToScreen "Image Server: $DOCKER_IMAGE_SERVER"
+							outputToScreen "Image Server: ${tput_yellow}$DOCKER_IMAGE_SERVER"
 							;;
 						#
 						*filter_* )
 							#
 							DOCKER_LABELS=$DOCKER_LABELS" "$fragment
-							outputToScreen " - label=$fragment"
+							outputToScreen " - ${tput_yellow}label=$fragment"
 							;;
 						#
 						* )
 							# Fall through
-							outputToScreen " - $fragment"
+							outputToScreen " - ${tput_yellow}$fragment"
 							;;
 						#
 					esac
@@ -160,7 +187,7 @@ readDockerFile(){
 		done < $DOCKER_FILEPATH
 		export DOCKER_LABELS
 	else
-		outputToScreen "Something wrong, so nothing to read."
+		outputToScreen "${tput_red}Something is wrong, so nothing to read."
 		statusExit
 	fi
 	
@@ -187,14 +214,13 @@ buildDockerfile(){
 	
 	if [[ $? ]]; then
 
-		outputToScreen "Building"
-		docker build \
-		-t ${DOCKER_REPOSITORY} \
-		$DOCKER_CONTEXT
-
-		tagDockerImage $1
+		outputToScreen "${tput_cyan}Building"
+		docker build -t \
+		${DOCKER_REPOSITORY} \
+		$DOCKER_CONTEXT \
+		&& tagDockerImage $1 \
+		&& reviewImages
 		
-		reviewImages
 	fi
 }
 
@@ -204,21 +230,20 @@ tagDockerfile(){
 	readDockerFile $projectDirectory
 	
 	if [[ $? ]]; then
-		outputToScreen "~Not~ Building"
+		outputToScreen "${tput_cyan}~Not~ Building"
 
-		tagDockerImage $1
-
-		reviewImages
+		tagDockerImage $1 \
+		&& reviewImages
 	fi
 }
 
 tagDockerImage(){
-	outputToScreen "Tagging"
+	outputToScreen "${tput_cyan}Tagging"
 	if [[ -n $1 ]]; then
-		outputToScreen "Was given the tag \"$1\""
+		outputToScreen "Was given the tag \"${tput_yellow}$1${tput_nrml}\""
 		docker tag ${DOCKER_REPOSITORY} ${DOCKER_REPOSITORY}:$1
 	else
-		outputToScreen "Was NOT given tag. Using \"${DOCKER_TAG}\" instead"
+		outputToScreen "Was NOT given tag. Using \"${tput_yellow}${DOCKER_TAG}${tput_nrml}\" instead"
 		docker tag ${DOCKER_REPOSITORY} ${DOCKER_REPOSITORY}:${DOCKER_TAG}
 	fi
 }
@@ -244,20 +269,22 @@ pushDockerfile(){
 
 	if [[ -z $1 ]]; then
 
-		outputToScreen "Remember to use a tag from the image list"
+		outputToScreen "${tput_cyan}Remember to use a tag from the image list"
 		outputToScreen "  Filter:  "$DOCKER_IMAGES_FILTER_ARGS
 		
 		reviewImages
 	else
 		outputToScreen "Pushing the base name"
-		docker push $DOCKER_REPOSITORY
-		outputToScreen "Pushing with the tag given \"$1\""
-		docker push $DOCKER_REPOSITORY:$1
+		docker push $DOCKER_REPOSITORY \
+		&& outputToScreen "Pushing with the tag given \"${tput_yellow}$1${tput_nrml}\"" \
+		&& docker push $DOCKER_REPOSITORY:$1
 	fi
 }
 
 
 # ------------------------------------
 # ------------------------------------
+
+
 
 

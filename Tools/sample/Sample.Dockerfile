@@ -8,7 +8,6 @@ LABEL description="A base CentOS container for building others"
 LABEL image_name=centos7
 LABEL image_server=
 
-## Optional
 LABEL filter_distro=centos
 LABEL filter_app=base
 
@@ -19,4 +18,6 @@ RUN yum -y update && \
 			which \
 			nano && \
 		yum clean all
+
+
 

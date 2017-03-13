@@ -15,8 +15,35 @@ dockerContextFiles = ${wildcard ${searchDepthString}/Dockerfile}
 dockerContextDirs = ${dir ${dockerContextFiles}}
 
 ## Actions which will build phony and clean recipes quickly
-actionVerbs = clean build run tag push
+
+loggedVerbs = build
+# tag push
+phonyVerbs = clean run touch build-force
+
+actionVerbs := ${phonyVerbs}
+actionVerbs += ${loggedVerbs}
+
+
 toolPath = Tools/
+
+
+# tput init
+tput_nrml    = ${shell tput sgr0}
+
+tput_bold    = ${shell tput bold}
+tput_undl    = ${shell tput smul}
+tput_revE    = ${shell tput rev}
+tput_blnk    = ${shell tput blink}
+
+tput_black   = ${shell tput setaf 0}
+tput_red     = ${shell tput setaf 1}
+tput_green   = ${shell tput setaf 2}
+tput_yellow  = ${shell tput setaf 3}
+tput_blue    = ${shell tput setaf 4}
+tput_magenta = ${shell tput setaf 5}
+tput_cyan    = ${shell tput setaf 6}
+tput_white   = ${shell tput setaf 7}
+
 
 .SECONDEXPANSION:
 
@@ -39,37 +66,79 @@ default: cls list usage;
 
 ## Per-Action recipes
 
+## alias
+
+# Build verb sends to bar directory
+${foreach anDir,${dockerContextDirs},${anDir}build}: $${dir $$@}
+
+# Bare directory assumes build
+${foreach anDir,${dockerContextDirs},${anDir}}: $${dir $$@}build.log
+
+## Logged Verbs
+
 ## Build a Dockerfile and log
-${foreach anDir,${dockerContextDirs},${anDir}build.log}: $${dir $$@}Dockerfile
-	@echo "## $@"
-	@echo "#  Building the docker image w/ tag ${makeBuildTag}"
+${foreach anDir,${dockerContextDirs},${anDir}build.log}: $${dir $$@}Dockerfile $${wildcard $${dir $$@}*}
+	@echo "${tput_cyan}## $@${tput_nrml}"
+	@echo "${tput_cyan}#  Building the docker image w/ tag ${tput_yellow}${makeBuildTag}${tput_nrml}"
+	@echo -n "	${tput_green}>${tput_nrml} ${tput_bold}"
 	${toolPath}dkBuild.sh ${dir $@} ${makeBuildTag} | tee $@
+	@echo -n "${tput_nrml}"
 
-## Run a Dockerfile and log
-${foreach anDir,${dockerContextDirs},${anDir}run.log}: $${dir $$@}build
-	@echo "## $@"
-	@echo "#  Running the docker image"
-	${toolPath}dkRun.sh ${dir $@} | tee $@
+# ## Tag a Dockerfile and log
+# ${foreach anDir,${dockerContextDirs},${anDir}tag.log}:
+# 	@echo "${tput_cyan}## $@${tput_nrml}"
+# 	@echo "${tput_cyan}#  Taging the docker image w/ tag ${tput_yellow}${makeBuildTag}${tput_nrml}"
+# 	${toolPath}dkTag.sh ${dir $@} ${makeBuildTag} | tee $@
 
-## Tag a Dockerfile and log
-${foreach anDir,${dockerContextDirs},${anDir}tag.log}: force $${dir $$@}build
-	@echo "## $@"
-	@echo "#  Taggin the docker image w/ tag ${makeBuildTag}"
-	${toolPath}dkTag.sh ${dir $@} ${makeBuildTag} | tee $@
+# ## Push a Dockerfile and log
+# ${foreach anDir,${dockerContextDirs},${anDir}push.log}:
+# 	@echo "${tput_cyan}## $@${tput_nrml}"
+# 	@echo "${tput_cyan}#  Pushing the docker image w/ tag ${tput_yellow}${makeBuildTag}${tput_nrml}"
+# 	${toolPath}dkPush.sh ${dir $@} ${makeBuildTag} | tee $@
 
-## Push a Dockerfile and log
-${foreach anDir,${dockerContextDirs},${anDir}push.log}: $${dir $$@}tag
-	@echo "## $@"
-	@echo "#  Pushing the docker image w/ tag ${makeBuildTag}"
-	${toolPath}dkPush.sh ${dir $@} ${makeBuildTag} | tee $@
+## Phony Verbs
+
+# clean
+${foreach anDir,${dockerContextDirs},${anDir}clean}: force
+	-find ${dir $@} -iname "*.log" -delete
+
+## Run a Dockerfile
+${foreach anDir,${dockerContextDirs},${anDir}run}: $${dir $$@}build
+	@echo "${tput_cyan}## $@${tput_nrml}"
+	@echo "${tput_cyan}#  Running the docker image${tput_nrml}"
+	@echo -n "	${tput_green}>${tput_nrml} ${tput_bold}"
+	${toolPath}dkRun.sh ${dir $@} /bin/bash
+	@echo -n "${tput_nrml}"
+
+## Touch a Dockerfile
+${foreach anDir,${dockerContextDirs},${anDir}touch}: $${dir $$@}Dockerfile
+	@echo "${tput_cyan}## $@${tput_nrml}"
+	@echo "${tput_cyan}#  Touching ${dir $@}Dockerfile${tput_nrml}"
+	@echo -n "	${tput_green}>${tput_nrml} ${tput_bold}"
+	touch ${dir $@}Dockerfile
+	@echo -n "${tput_nrml}"
+
+## Build-force a Dockerfile
+${foreach anDir,${dockerContextDirs},${anDir}build-force}: $${dir $$@}touch $${dir $$@}build
+
+
+
+# # Directory followed by one of loggedVerbs
+# ${foreach anDir,${dockerContextDirs},${foreach anVerb,${loggedVerbs},${anDir}${anVerb}}}:
+
+
 
 
 #### ---- ---- ---- ---- ---- ---- ----
+
+## The force prerequisite
+force: ;
 
 ## Phony recipes
 .PHONY: default debug list usage cls clean hitman-subtask hitman lsr repo-local force \
 	build run tag push usage \
 	${foreach anDir,${dockerContextDirs},${foreach anVerb,${actionVerbs},${anDir}${anVerb}}} \
+	${foreach anDir,${dockerContextDirs},${anDir}run} \
 	${foreach anDir,${dockerContextDirs},${anDir}}
 
 #### ---- ---- ----
@@ -97,6 +166,19 @@ list:
 	@${foreach anVerb,${actionVerbs},echo "    "${anVerb};}
 	@echo
 
+usage:
+	@echo "Usage:"
+	@echo "    make <distro>/<application>/<actionVerb>"
+	@echo
+	@echo "  Sequenced actions defined in the project's Makefile may have other action verbs or be optional."
+	@echo
+	@echo "More Help:"
+	@echo "    make <verb>"
+	@echo
+	@echo "Example:"
+	@echo "    make centos/-base/build"
+	@echo
+
 build:
 	@echo "Usage:"
 	@echo "  make <distro>/<application>/[build[.log]]"
@@ -122,43 +204,35 @@ push:
 	@echo 
 	@echo "'push' depends on 'tag' which is forced"
 
-usage:
-	@echo "Usage:"
-	@echo "    make <distro>/<application>/<actionVerb>"
-	@echo
-	@echo "Example:"
-	@echo "    make centos/-base/build"
-	@echo
-
 cls:
 	clear
 
 ## Clean log files
 clean: force
-	-rm ${searchDepthString}/*.log
+	-find . -iname "*.log" -delete
 
-hitman-subtask:
-	dkHitman.sh
-	dkHitman.sh
+#### ---- ---- ---- ---- ---- ---- ----
 
-hitman: force cls clean hitman-subtask repo-local
+serverLocalStorageReset_yesIUnderstandWhatThisIsDoing:
+	rm -r /docker/*
+
+hitman-subtask_DontRunThisByItself:
+	${toolPath}dkHitman.sh
+	${toolPath}dkHitman.sh
+
+hitman_yesIUnderstandWhatThisIsDoing: force cls clean hitman-subtask_yesIUnderstandWhatThisIsDoing serverLocalStorageReset_yesIUnderstandWhatThisIsDoing repo-local
 
 lsr: repo-local
 
 repo-local:
 	docker images
 
-## The force prerequisite
-force: ;
-
-## Shorter phony action recipes
-${foreach anDir,${dockerContextDirs},${foreach anVerb,${actionVerbs},${anDir}${anVerb}}}: $$@.log
-
-${foreach anDir,${dockerContextDirs},${anDir}}: $$@build.log
-
-
-${foreach anDir,${dockerContextDirs},${anDir}clean}: force
-	rm -rf ${dir $@}*.log
-
 #### ---- ---- ---- ---- ---- ---- ----
+
+server: force;
+	cd server && ${MAKE}
+
+server_test: force;
+	cd server && ${MAKE} test
+
 
