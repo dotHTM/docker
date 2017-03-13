@@ -41,7 +41,6 @@ Dirs found w/ contexts:
     centos/-base/
     centos/httpd-perl/
     centos/httpd/
-    centos/manage-pna-apache/
     centos/mariadb/
     centos/mysql/
     hub/hello-world/
