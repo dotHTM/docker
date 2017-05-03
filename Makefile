@@ -20,3 +20,5 @@ centos/httpd-perl/: centos/httpd/ ;
 hub/gruntySass/: hub/rubyNode/ ;
 
 centos/ruby/: centos/-base/ ;
+
+test/apache/: centos/httpd/ ;
