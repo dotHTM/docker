@@ -212,6 +212,21 @@ readDockerFile(){
 	
 	export DOCKER_REPOSITORY=`echo $DOCKER_REPOSITORY | perl -pe 's/\/\//\//' | perl -pe 's/^\///' | perl -pe 's/^\///' `
 
+	outputToScreen "DOCKER_REPOSITORY = '$DOCKER_REPOSITORY'"
+
+if [ -z $DOCKER_REPOSITORY ]; then
+	outputToScreen "DOCKER_REPOSITORY could not be determined."
+	outputToScreen "  Please consult the Dockerfile for the line(s):"
+	outputToScreen
+	outputToScreen "        LABEL image_name="
+	outputToScreen "or"
+	outputToScreen "        LABEL image_user="
+	outputToScreen "        LABEL image_server= #(optional)"
+	outputToScreen "        LABEL image_tag="
+	exit 0
+fi
+
+
 }
 
 reviewImages(){
@@ -227,14 +242,15 @@ buildDockerfile(){
 	projectDirectory=$1 && shift
 	
 	readDockerFile $projectDirectory
-	
-	if [[ $? ]]; then
 
+
+	if [[ $? ]]; then
+	#statements
 		outputToScreen "${tput_cyan}Building"
-		docker build -t \
-		${DOCKER_REPOSITORY} \
-		$DOCKER_CONTEXT \
+		docker build \
+		-t $DOCKER_REPOSITORY \
 		-f $DOCKER_FILEPATH \
+		$DOCKER_CONTEXT \
 		&& tagDockerImage $1 \
 		&& reviewImages
 		
