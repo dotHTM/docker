@@ -3,14 +3,14 @@ services:
   jekyll:
     build: 
       context: ./
-      dockerfile: jekyll.docker
+      dockerfile: jekyll.dockerfile
     ports:
       - "4000:4000"
 
   grunt:
     build: 
       context: ./
-      dockerfile: grunt.docker
+      dockerfile: grunt.dockerfile
     ports:
       - "35729:35729"
 
