@@ -1,16 +1,20 @@
 version: '3'
 services:
   jekyll:
+    # image: dothtm/alpine_jekyll_grunt:latest
     build: 
       context: ./
-      dockerfile: jekyll.dockerfile
+      dockerfile: jekyll-grunt.dockerfile
     ports:
       - "4000:4000"
+    entrypoint: "/jekyll_entry.sh"
 
   grunt:
+    # image: dothtm/alpine_jekyll_grunt:latest
     build: 
       context: ./
-      dockerfile: grunt.dockerfile
+      dockerfile: jekyll-grunt.dockerfile
     ports:
       - "35729:35729"
+    entrypoint: "/grunt_entry.sh"
 
