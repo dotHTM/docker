@@ -14,3 +14,13 @@ services:
     ports:
       - "35729:35729"
 
+  apache:
+    build:
+      context: ./
+      dockerfile: apache.docker
+    ports:
+      - "80:80"
+      - "443:443"
+ 
+ 
+ 
